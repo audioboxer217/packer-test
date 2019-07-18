@@ -6,9 +6,11 @@ pipeline {
         echo "Build AMI"
         withCredentials([
           usernamePassword(credentialsId: 'aws_packer', passwordVariable: 'AWS_SECRET', usernameVariable: 'AWS_ACCESS'),
-          sshUserPrivateKey(credentialsId: "PackerTest", keyFileVariable: 'keyfile')
+          sshUserPrivateKey(credentialsId: "PackerTest", keyFileVariable: 'PackerTestPem')
         ]) {
-          sh 'packer build -var "efs_volume=${EFS_VOLUME}" -var aws_secret_key=${AWS_SECRET} -var aws_access_key=${AWS_ACCESS} ecs_stage.json'
+          sh "cat ${PackerTestPem} > PackerTest.pem"
+          sh "/usr/local/bin/packer build -var efs_volume=${EFS_VOLUME} -var aws_secret_key=${AWS_SECRET} -var aws_access_key=${AWS_ACCESS} ecs_stage.json"
+          sh "rm PackerTest.pem"
         }
       }
     }
