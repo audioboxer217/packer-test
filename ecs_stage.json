@@ -1,0 +1,64 @@
+{
+  "variables": {
+    "aws_access_key": "{{env `AWS_ACCESS_KEY`}}",
+    "aws_secret_key": "{{env `AWS_SECRET_KEY`}}",
+    "efs_volume": "",
+    "efs_mountpoint": "dunkin"
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "us-east-1",
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type": "hvm",
+        "architecture": "x86_64",
+        "name": "amzn2-ami-ecs-hvm-2.0.*",
+        "root-device-type": "ebs"
+      },
+      "owners": ["591542846629"],
+      "most_recent": true
+    },
+    "instance_type": "t2.micro",
+    "ssh_keypair_name": "PackerTest",
+    "ssh_private_key_file": "{{pwd}}/PackerTest.pem",
+    "security_group_ids": [
+      "sg-07be025cd45c13f15",
+      "sg-0b61b8be23cfe7e91"
+    ],
+    "vpc_id": "vpc-fee11e9a",
+    "subnet_id": "subnet-f5dc57af",
+    "ssh_username": "ec2-user",
+    "ami_name": "packer-test {{timestamp}}"
+  }],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "{{pwd}}/files/ecs.config",
+      "destination": "/tmp/ecs.conf"
+    },
+    {
+      "type": "shell",
+      "expect_disconnect": true,
+      "inline": [
+        "sudo yum update -y",
+        "sudo yum update -y --security",
+        "sudo yum install -y nfs-utils",
+        "sudo mkdir /{{user `efs_mountpoint`}}",
+        "echo '{{user `efs_volume`}}.efs.us-east-1.amazonaws.com:/    /{{user `efs_mountpoint`}} nfs defaults,vers=4.1   0       0' | sudo tee -a /etc/fstab",
+        "sudo cp /tmp/ecs.conf /etc/ecs/",
+        "sudo shutdown -r now"
+      ]
+    },
+    {
+      "type": "shell",
+      "pause_before": "15s",
+      "scripts": [
+        "{{pwd}}/scripts/ecs_os_query.sh",
+        "{{pwd}}/scripts/ecs_splunk.sh",
+        "{{pwd}}/scripts/ecs_new_relic.sh"
+      ]
+    }
+  ]
+}
