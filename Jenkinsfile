@@ -5,7 +5,8 @@ pipeline {
       steps {
         echo "Build AMI"
         withCredentials([
-          usernamePassword(credentialsId: '', passwordVariable: 'AWS_SECRET', usernameVariable: 'AWS_ACCESS')
+          usernamePassword(credentialsId: 'aws_packer', passwordVariable: 'AWS_SECRET', usernameVariable: 'AWS_ACCESS'),
+          sshUserPrivateKey(credentialsId: "PackerTest", keyFileVariable: 'keyfile')
         ]) {
           sh 'packer build -var "efs_volume=${EFS_VOLUME}" -var aws_secret_key=${AWS_SECRET} -var aws_access_key=${AWS_ACCESS} ecs_stage.json'
         }
