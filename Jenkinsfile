@@ -19,7 +19,7 @@ pipeline {
     }
     stage('Test AMI') {
       steps {
-          sh "aws ec2 run-instances --image-id \$(cat ami-id.txt) --region us-east-1 --count 1 --instance-type t2.micro --key-name PackerTest --security-group-ids sg-07be025cd45c13f15 sg-0b61b8be23cfe7e91 --subnet-id subnet-f5dc57af --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=${BUILD_TAG}-test}]'"
+          sh "aws ec2 run-instances --image-id \$(cat ami_id.txt) --region us-east-1 --count 1 --instance-type t2.micro --key-name PackerTest --security-group-ids sg-07be025cd45c13f15 sg-0b61b8be23cfe7e91 --subnet-id subnet-f5dc57af --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=${BUILD_TAG}-test}]'"
           sh "aws ec2 describe-instances --filters 'Name=tag:Name,Values=${BUILD_TAG}-test' --output text --query 'Reservations[*].Instances[*].InstanceId') > instance_id.txt"
           sh """
             RUNNING=\$false
