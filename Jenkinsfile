@@ -1,9 +1,5 @@
 pipeline {
-  agent {
-      docker {
-          image 'seppler/dunkin-build-server:latest'
-      }
-  }
+  agent { dockerfile true }
   environment {
       AWS_ACCESS_KEY_ID     = credentials('aws_packer_access_key')
       AWS_SECRET_ACCESS_KEY = credentials('aws_packer_secret_key')
@@ -17,7 +13,7 @@ pipeline {
         ]) {
           sh "cat ${PackerTestPem} > PackerTest.pem"
           sh "/usr/local/bin/packer build -var efs_volume=${EFS_VOLUME} -machine-readable ecs_stage.json | tee build.log"
-          sh "grep 'artifact,0,id' build.log | awk -F',' '{print \$6} | awk -F':' '{print \$2} > ami_id.txt"
+          sh "grep 'artifact,0,id' build.log | awk -F',' '{print \$6}' | awk -F':' '{print \$2}' > ami_id.txt"
         }
       }
     }
